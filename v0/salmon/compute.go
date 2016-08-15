@@ -123,9 +123,13 @@ func ListInstance(c context.Context, projectIDs []string) ([]*Instances, error) 
 }
 
 func createComputeService(c context.Context) (*compute.Service, error) {
+	source, err := google.DefaultTokenSource(c, compute.ComputeScope)
+	if err != nil {
+		return nil, err
+	}
 	client := &http.Client{
 		Transport: &oauth2.Transport{
-			Source: google.AppEngineTokenSource(c, compute.ComputeScope),
+			Source: source,
 			Base:   &urlfetch.Transport{Context: c},
 		},
 	}
