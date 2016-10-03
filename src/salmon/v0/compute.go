@@ -69,6 +69,8 @@ func ListZone(c context.Context) []string {
 // ListInstance is Compute Engine Instance 一覧を取得する
 // TODO cursor
 func ListInstance(c context.Context, projectIDs []string) ([]*Instances, error) {
+	log.Infof(c, "ProjectIDs %v", projectIDs)
+
 	s, err := createComputeService(c)
 	if err != nil {
 		return nil, err
