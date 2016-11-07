@@ -13,22 +13,24 @@ import (
 var (
 	// ErrJobWorking is JobのStatusがDONEになってない時のエラー
 	ErrJobWorking = errors.New("job working")
+
+	// ErrValidation is ParameterのValidationに失敗した時のエラー
+	ErrValidation = errors.New("validation err")
 )
 
 // Query is Run Query
-func Query(c context.Context, projectID string, defaultDatasetID string, query string, option *bq.QueryConfig) (*bq.Job, error) {
+func Query(c context.Context, projectID string, config *bq.QueryConfig) (*bq.Job, error) {
 	client, err := bq.NewClient(c, projectID)
 	if err != nil {
 		log.Errorf(c, "bigquery.NewClient err = %v", err)
 		return nil, err
 	}
-	q := client.Query(query)
-	if option != nil {
-		q.QueryConfig = *option
+	q := client.Query(config.Q)
+	if config == nil {
+		log.Errorf(c, "bigquery.QueryConfig required")
+		return nil, ErrValidation
 	}
-
-	q.DefaultProjectID = projectID
-	q.DefaultDatasetID = defaultDatasetID
+	q.QueryConfig = *config
 
 	j, err := q.Run(c)
 	if err != nil {
