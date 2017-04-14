@@ -32,7 +32,7 @@ func LoadFromCSV(c context.Context, projectID, datasetID string, tableID string,
 		return nil, err
 	}
 
-	gcsRef := client.NewGCSReference(gcsPath)
+	gcsRef := bq.NewGCSReference(gcsPath)
 	gcsRef.SourceFormat = bq.CSV
 	gcsRef.FieldDelimiter = config.FieldDelimiter
 	gcsRef.SkipLeadingRows = config.SkipLeadingRows
@@ -77,7 +77,7 @@ func LoadFromJSON(c context.Context, projectID, datasetID string, tableID string
 		return nil, err
 	}
 
-	gcsRef := client.NewGCSReference(gcsPath)
+	gcsRef := bq.NewGCSReference(gcsPath)
 	gcsRef.SourceFormat = bq.JSON
 	gcsRef.Encoding = config.Encoding
 	gcsRef.MaxBadRecords = config.MaxBadRecords
@@ -113,7 +113,7 @@ func LoadFromDatastoreBackup(c context.Context, projectID, datasetID string, tab
 		return nil, err
 	}
 
-	gcsRef := client.NewGCSReference(gcsPath)
+	gcsRef := bq.NewGCSReference(gcsPath)
 	gcsRef.SourceFormat = bq.DatastoreBackup
 	gcsRef.MaxBadRecords = config.MaxBadRecords
 
@@ -144,7 +144,7 @@ func LoadFromAvro(c context.Context, projectID, datasetID string, tableID string
 		return nil, err
 	}
 
-	gcsRef := client.NewGCSReference(gcsPath)
+	gcsRef := bq.NewGCSReference(gcsPath)
 	gcsRef.SourceFormat = bq.Avro
 	gcsRef.MaxBadRecords = config.MaxBadRecords
 
@@ -162,7 +162,7 @@ func LoadFromAvro(c context.Context, projectID, datasetID string, tableID string
 
 // GetLoadJobResult is Load Job のResultsを取得する
 // TODO Staticsとかの情報はLibが未対応っぽいので、stateがdoneになったかどうかだけ返している
-func GetLoadJobResult(c context.Context, projectID string, jobID string) (error) {
+func GetLoadJobResult(c context.Context, projectID string, jobID string) error {
 	client, err := bq.NewClient(c, projectID)
 	if err != nil {
 		log.Errorf(c, "bigquery.NewClient err = %v", err)
