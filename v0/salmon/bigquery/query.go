@@ -7,6 +7,8 @@ import (
 
 	"google.golang.org/appengine/log"
 
+	"google.golang.org/api/iterator"
+
 	bq "cloud.google.com/go/bigquery"
 )
 
@@ -41,61 +43,53 @@ func Query(c context.Context, projectID string, config *bq.QueryConfig) (*bq.Job
 }
 
 // GetQueryJobResult is 引数で渡したjobIDのQueryの結果を取得する
-func GetQueryJobResult(c context.Context, projectID string, jobID string) ([]bq.ValueList, []bq.Schema, error) {
+func GetQueryJobResult(c context.Context, projectID string, jobID string) ([][]bq.Value, error) {
 	client, err := bq.NewClient(c, projectID)
 	if err != nil {
 		log.Errorf(c, "bigquery.NewClient err = %v", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	job, err := client.JobFromID(c, jobID)
 	if err != nil {
 		log.Errorf(c, "bigquery.JobFromID err = %v", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	js, err := job.Status(c)
 	if err != nil {
 		log.Errorf(c, "bigquery.Job.Status err = %v", err)
-		return nil, nil, err
+		return nil, err
 	}
 	if js.Done() == false {
-		return nil, nil, ErrJobWorking
+		return nil, ErrJobWorking
 	}
 
 	if js.Err() != nil {
 		log.Errorf(c, "bigquery.JobStatus err = %v", err)
-		return nil, nil, js.Err()
+		return nil, js.Err()
 	}
 
 	it, err := job.Read(c)
 	if err != nil {
 		log.Errorf(c, "bigquery.Job.Read err = %v", err)
-		return nil, nil, err
+		return nil, err
 	}
 
-	var sl []bq.Schema
-	var vl []bq.ValueList
-	for it.Next(c) {
+	var rows [][]bq.Value
+	for {
 		// Retrieve the current row into a list of values.
-		var values bq.ValueList
-		if err := it.Get(&values); err != nil {
-			log.Errorf(c, "bigquery.Iterator.Get err = %v", err)
-			return nil, nil, err
+		var values []bq.Value
+		err := it.Next(&values)
+		if err == iterator.Done {
+			break
 		}
-		vl = append(vl, values)
-
-		schema, err := it.Schema()
 		if err != nil {
-			log.Errorf(c, "bigquery.Schema err = %v", err)
-			return nil, nil, err
+			log.Errorf(c, "bigquery.Iterator.Get err = %v", err)
+			return nil, err
 		}
-		sl = append(sl, schema)
-	}
-	if it.Err() != nil {
-		log.Errorf(c, "bigquery.Iterator.Err err = %v", err)
-		return nil, nil, err
+		rows = append(rows, values)
 	}
 
-	return vl, sl, nil
+	return rows, nil
 }
