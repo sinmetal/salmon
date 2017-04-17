@@ -7,8 +7,6 @@ import (
 
 	"google.golang.org/appengine/log"
 
-	"google.golang.org/api/iterator"
-
 	bq "cloud.google.com/go/bigquery"
 )
 
@@ -43,7 +41,7 @@ func Query(c context.Context, projectID string, config *bq.QueryConfig) (*bq.Job
 }
 
 // GetQueryJobResult is 引数で渡したjobIDのQueryの結果を取得する
-func GetQueryJobResult(c context.Context, projectID string, jobID string) ([][]bq.Value, error) {
+func GetQueryJobResult(c context.Context, projectID string, jobID string) (*bq.RowIterator, error) {
 	client, err := bq.NewClient(c, projectID)
 	if err != nil {
 		log.Errorf(c, "bigquery.NewClient err = %v", err)
@@ -76,20 +74,5 @@ func GetQueryJobResult(c context.Context, projectID string, jobID string) ([][]b
 		return nil, err
 	}
 
-	var rows [][]bq.Value
-	for {
-		// Retrieve the current row into a list of values.
-		var values []bq.Value
-		err := it.Next(&values)
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Errorf(c, "bigquery.Iterator.Get err = %v", err)
-			return nil, err
-		}
-		rows = append(rows, values)
-	}
-
-	return rows, nil
+	return it, err
 }
