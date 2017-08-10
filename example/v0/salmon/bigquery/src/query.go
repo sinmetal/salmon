@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"golang.org/x/net/context"
+	"context"
 
 	sbq "github.com/sinmetal/salmon/v0/salmon/bigquery"
 

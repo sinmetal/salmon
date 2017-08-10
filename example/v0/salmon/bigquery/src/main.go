@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"golang.org/x/net/context"
+	"context"
 )
 
 func main() {
