@@ -8,6 +8,8 @@ import (
 	"google.golang.org/appengine/log"
 
 	bq "cloud.google.com/go/bigquery"
+	"google.golang.org/api/option"
+	"time"
 )
 
 var (
@@ -20,7 +22,13 @@ var (
 
 // Query is Run Query
 func Query(c context.Context, projectID string, config *bq.QueryConfig) (*bq.Job, error) {
-	client, err := bq.NewClient(c, projectID)
+	// TODO Client Optionの渡し方を考える
+	o := option.WithScopes(bq.Scope, "https://www.googleapis.com/auth/drive")
+
+	c_withDeadline, cancel := context.WithDeadline(c, time.Now().Add(3 * time.Minute))
+	defer cancel()
+
+	client, err := bq.NewClient(c_withDeadline, projectID, o)
 	if err != nil {
 		log.Errorf(c, "bigquery.NewClient err = %v", err)
 		return nil, err
